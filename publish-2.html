@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex"><title>Выложить версию</title>
+<style>
+:root{--bg:#14092b;--cd:#241345;--pump:#ff8a2b;--mint:#7ef0c4;--bad:#ff6b8a;--tx:#f4ecff;--mu:#b9a8d8;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,sans-serif;padding:max(20px,env(safe-area-inset-top)) 16px 40px}
+main{max-width:640px;margin:0 auto}h1{font-size:24px;margin:0 0 16px}
+label{display:block;margin:14px 0 4px;color:var(--mu);font-size:14px}
+input,textarea{width:100%;background:var(--cd);color:var(--tx);border:1.5px solid #4a2d80;border-radius:10px;padding:12px;font:inherit}
+textarea{min-height:140px;font:13px/1.4 monospace}
+button{margin-top:18px;width:100%;font:600 17px system-ui;background:var(--pump);color:#1a0b00;border:0;border-radius:12px;padding:15px;cursor:pointer}button:disabled{opacity:.5}
+#out{margin-top:14px;min-height:24px}.ok{color:var(--mint)}.er{color:var(--bad)}
+</style></head><body><main>
+<h1>Выложить новую версию</h1>
+<label>Пароль выкладки</label><input id="pw" type="password" autocomplete="current-password">
+<label>Номер версии (должен совпадать с APP_VER в коде)</label><input id="ver" type="number" min="1">
+<label>Что нового (каждая строка — отдельный пункт)</label><textarea id="nt" style="min-height:90px;font:15px system-ui"></textarea>
+<label>HTML-код игры</label><textarea id="html" spellcheck="false" placeholder="Вставьте весь код игры сюда"></textarea>
+<button id="go">Опубликовать</button><div id="out"></div>
+<script>
+const SB="https://axiscisqaqpfsuobemnj.supabase.co",KEY="sb_publishable_SmIT8OkQHxwCOuiLKZqgEQ_znd8bC7i",$=s=>document.querySelector(s);
+$("#html").oninput=()=>{const m=$("#html").value.match(/APP_VER=window\.APP_VER=(\d+)/);if(m)$("#ver").value=m[1]};
+$("#go").onclick=async()=>{const o=$("#out"),h=$("#html").value,v=+$("#ver").value,m=h.match(/APP_VER=window\.APP_VER=(\d+)/);
+if(!$("#pw").value||!v||h.length<1000){o.className="er";o.textContent="Заполните пароль, версию и код.";return}
+if(m&&+m[1]!==v){o.className="er";o.textContent="В коде версия "+m[1]+", а вы указали "+v+". Исправьте, иначе игра будет просить обновиться.";return}
+$("#go").disabled=true;o.className="";o.textContent="Публикую…";
+try{const r=await fetch(SB+"/rest/v1/rpc/publish_release",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify({p_pw:$("#pw").value,p_ver:v,p_notes:$("#nt").value,p_html:h})});
+const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||"Ошибка "+r.status);o.className="ok";o.textContent="Готово: версия "+v+" опубликована. Сайт и игра уже её видят."}catch(e){o.className="er";o.textContent=e.message}$("#go").disabled=false};
+</script></main></body></html>
